@@ -37,17 +37,41 @@ router.get('/', verificarSessao, async (req, res) => {
     try {
         await client.connect();
 
+        const query = req.query.busca;
+        let result
+
+        if (query.length == 0) {
+            result = await client.query(`
+                SELECT
+                    t.id,
+                    t.nome,
+                    t.cpf,
+                    t.telefone
+                FROM tutores t
+                WHERE l.titulo ILIKE '%' || $1 || '%'
+            `, [termoBusca]);
+        } else {
+            result = await client.query('SELECT * FROM tutores');
+        }
+
         // TODO: req.query.busca contém o termo digitado (se houver).
         // Monte a query de acordo: se não houver busca, traga todos
         // os tutores; se houver, filtre pelo nome.
 
-        const resultado = await client.query('SELECT * FROM tutores'); // TODO: ajustar
+        // TODO: ajustar
 
         // TODO: antes de responder, percorra resultado.rows e troque
         // o campo "cpf" de cada tutor pelo valor descriptografado
         // (descriptografarCPF), senão o CPF aparece ilegível na tela.
 
-        res.json(resultado.rows);
+        if (!result) {
+            return res.send({
+                'status': 500,
+                'message': ''
+            })
+        }
+
+        res.send(result.rows)
     } catch (erro) {
         res.status(500).json({ erro: erro.message });
     } finally {

@@ -54,7 +54,7 @@ export function criarCliente() {
         host:     'localhost',
         port:     5432,
         user:     'postgres',
-        password: 'sua_senha',
-        database: 'saep_db'
+        password: 'root',
+        database: 'clinica'
     });
 }

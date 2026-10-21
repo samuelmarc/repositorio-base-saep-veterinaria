@@ -34,8 +34,7 @@ async function carregarUsuarioLogado() {
 
         const dados = await resposta.json();
 
-        // TODO (RF-09): usar dados.usuario.nome para preencher o
-        // conteúdo de nomeUsuarioEl (ex: nomeUsuarioEl.textContent = ...)
+        nomeUsuarioEl.textContent = dados.usuario.nome;
 
     } catch (erro) {
         console.error('Erro ao verificar sessão:', erro);
@@ -43,7 +42,13 @@ async function carregarUsuarioLogado() {
 }
 
 btnSair.addEventListener('click', async () => {
-    // TODO (RF-10): chamar a rota POST /api/auth/logout via fetch,
-    // e depois redirecionar o usuário para /login.html
-    // Dica: veja exemplos/exemplo-logout.js
+    const response = await fetch("/api/auth/logout", {
+        method: "POST"
+    })
+
+    if (response.ok) {
+        window.location.href = "/login.html";
+    } else {
+        alert("Erro ao sair. Tente novamente.");
+    }
 });

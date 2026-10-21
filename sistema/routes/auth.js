@@ -101,7 +101,16 @@ router.get('/sessao', (req, res) => {
 // exemplos/exemplo-logout.js
 // ─────────────────────────────────────────
 router.post('/logout', (req, res) => {
-    // implemente aqui
+    if (!req.session.usuario) {
+        return res.sendStatus(401)
+    }
+
+    req.session.destroy((erro) => {
+        if (erro) {
+            return res.status(500).send('Erro ao encerrar a sessão.');
+        }
+        res.send('Sessão encerrada com sucesso.');
+    });
 });
 
 export default router;
