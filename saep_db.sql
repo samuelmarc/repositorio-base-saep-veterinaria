@@ -46,8 +46,7 @@ CREATE TABLE pets (
     nome      VARCHAR(100) NOT NULL,
     especie   VARCHAR(50),
     tutor_id  INTEGER NOT NULL,
-    CONSTRAINT fk_pets_tutor
-        FOREIGN KEY (tutor_id) REFERENCES tutores(id)
+    CONSTRAINT fk_pets_tutor FOREIGN KEY (tutor_id) REFERENCES tutores(id) ON DELETE CASCADE
 );
 
 -- ============================================================
@@ -60,8 +59,7 @@ CREATE TABLE agendamentos (
     pet_id             INTEGER NOT NULL,
     data_agendamento   DATE NOT NULL,
     observacao         VARCHAR(255),
-    CONSTRAINT fk_agendamentos_pet
-        FOREIGN KEY (pet_id) REFERENCES pets(id)
+    CONSTRAINT fk_agendamentos_pet FOREIGN KEY (pet_id) REFERENCES pets(id) ON DELETE CASCADE
 );
 
 -- ============================================================

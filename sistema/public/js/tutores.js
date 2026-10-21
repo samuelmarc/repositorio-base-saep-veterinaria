@@ -134,7 +134,7 @@ btnBuscar.addEventListener('click', () => {
 formTutor.addEventListener('submit', async (evento) => {
     evento.preventDefault();
 
-    const tutor = {
+    const tut = {
         nome: tutorNomeInput.value.trim(),
         cpf: tutorCpfInput.value.trim(),
         telefone: tutorTelefoneInput.value.trim()
@@ -143,9 +143,47 @@ formTutor.addEventListener('submit', async (evento) => {
     const id = tutorIdInput.value;
 
     try {
-        // TODO: se "id" estiver preenchido, é uma edição (RF-17) ->
+        if (!id) {
+            const resposta = await fetch(`/api/tutores`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(tut)
+            })
+            if (resposta.status == 401) {
+                window.location.href = '/login.html';
+                return;
+            }
+            if (resposta.status != 201) {
+                alert("Não foi possível adicionar o tutor.")
+                return
+            }
+        } else {
+            const resposta = await fetch(`/api/tutores/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(tut)
+            })
+            if (resposta.status == 401) {
+                window.location.href = '/login.html';
+                return;
+            }
+            if (resposta.status != 200) {
+                alert("Não foi possível editar o tutor.")
+                return
+            }
+        }
+
+        formTutor.reset()
+        btnCancelarEdicao.classList.add("d-none")
+        carregarTutores()
+
+        // TODO: se "id" estiver preenchido, é uma edição (RC-17) ->
         //   fetch PUT /api/tutores/{id}
-        // Se estiver vazio, é um novo cadastro (RF-15) ->
+        // Se estiver vazio, é um novo cadastro (RC-15) ->
         //   fetch POST /api/tutores
         // Em ambos os casos: enviar "tutor" como JSON no body,
         // conferir resposta.ok, e se der certo:
@@ -172,6 +210,12 @@ function preencherFormularioParaEdicao(tutor) {
     // TODO: preencher tutorIdInput, tutorNomeInput, tutorCpfInput,
     // tutorTelefoneInput com os dados de "tutor", e mostrar o
     // botão btnCancelarEdicao (remover a classe d-none)
+
+    tutorIdInput.value = tutor.id
+    tutorNomeInput.value = tutor.nome
+    tutorCpfInput.value = tutor.cpf
+    tutorTelefoneInput.value = tutor.telefone
+    btnCancelarEdicao.classList.remove("d-none")
 }
 
 // ------------------------------------------------------------
@@ -182,9 +226,14 @@ async function excluirTutor(id) {
     if (!confirm('Deseja realmente excluir este tutor?')) return;
 
     try {
-        // TODO: fetch DELETE /api/tutores/{id}, conferir resposta.ok,
-        // e se der certo, chamar carregarTutores() de novo
-
+        const response = await fetch(`/api/tutores/${id}`, {
+            method: "DELETE"
+        })
+        if (response.status == 200) {
+            carregarTutores()
+        } else {
+            alert('Não foi possível excluir o tutor.')
+        }
     } catch (erro) {
         alert('Erro ao excluir tutor.');
         console.error(erro);

@@ -85,15 +85,20 @@ router.post('/', verificarSessao, async (req, res) => {
 
         const { nome, cpf, telefone } = req.body;
 
-        // TODO: validar campos obrigatórios (nome, cpf)
+        if (!nome || !cpf || !telefone) {
+            return res.status(400).json({ erro: 'Informe nome, CPF e telefone do tutor.' });
+        }
 
         // TODO: criptografar o CPF antes de salvar
         // const cpfCriptografado = criptografarCPF(cpf);
 
-        // TODO: montar o INSERT usando client.query(...), com
-        // RETURNING * para devolver o registro criado
+        const cpfCriptografado = criptografarCPF(cpf);
+        const result = await client.query(
+            'INSERT INTO tutores (nome, cpf, telefone) VALUES ($1, $2, $3) RETURNING *',
+            [nome, cpfCriptografado, telefone]
+        );
 
-        res.status(201).json({}); // TODO: substituir pelo registro criado
+        res.status(201).json(result.rows[0]);
     } catch (erro) {
         res.status(500).json({ erro: erro.message });
     } finally {
@@ -112,12 +117,14 @@ router.put('/:id', verificarSessao, async (req, res) => {
         const { id } = req.params;
         const { nome, cpf, telefone } = req.body;
 
-        // TODO: criptografar o CPF recebido antes de atualizar
+        const cpfCrypt = criptografarCPF(cpf)
 
-        // TODO: montar o UPDATE usando client.query(...), filtrando
-        // por WHERE id = $... (use req.params.id)
+        const resultado = await client.query("UPDATE tutores SET nome = $1, cpf = $2, telefone = $3 WHERE id = $4 RETURNING *", [nome.trim(), cpfCrypt.trim(), telefone.trim(), id])
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ erro: 'Tutor não encontrado' });
+        }
 
-        res.json({}); // TODO: substituir pela confirmação/registro atualizado
+        res.json(resultado.rows[0]);
     } catch (erro) {
         res.status(500).json({ erro: erro.message });
     } finally {
@@ -135,10 +142,16 @@ router.delete('/:id', verificarSessao, async (req, res) => {
 
         const { id } = req.params;
 
-        // TODO: montar o DELETE usando client.query(...), filtrando
-        // por WHERE id = $1
+        const resultado = await client.query(
+            'DELETE FROM tutores WHERE id = $1 RETURNING nome',
+            [id]
+        );
 
-        res.json({ mensagem: 'Tutor removido com sucesso.' }); // ajuste se quiser
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ erro: 'Tutor não encontrado.' });
+        }
+
+        res.json({ mensagem: `"${resultado.rows[0].nome}" removido com sucesso.` });
     } catch (erro) {
         res.status(500).json({ erro: erro.message });
     } finally {
