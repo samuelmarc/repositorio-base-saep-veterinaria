@@ -33,9 +33,17 @@ async function inicializar() {
 // ------------------------------------------------------------
 async function carregarAgendamentos() {
     try {
-        // TODO: fetch GET /api/agendamentos
-        // Trate resposta.status === 401 (redirecionar para /login.html)
-        // Pegue o JSON e chame renderizarAgendamentos(agendamentos)
+        const url = '/api/agendamentos';
+
+        const resposta = await fetch(url);
+
+        if (resposta.status == 401) {
+            window.location.href = '/login.html';
+            return;
+        }
+
+        const dados = await resposta.json();
+        renderizarAgendamentos(dados);
 
     } catch (erro) {
         mensagemAgendamentos.textContent = 'Erro ao carregar agendamentos.';
@@ -61,6 +69,70 @@ function renderizarAgendamentos(agendamentos) {
     // Depois de montar o innerHTML, adicione os addEventListener
     // nos botões "Salvar" recém-criados (eles não existem até esse
     // innerHTML ser inserido).
+
+    if (!agendamentos || agendamentos.length === 0) {
+        mensagemAgendamentos.classList.remove("d-none");
+        tabela.classList.add("d-none");
+        return;
+    }
+
+    mensagemAgendamentos.classList.add("d-none");
+    tabela.classList.remove("d-none");
+
+    corpoTabela.innerHTML = '';
+
+    agendamentos.forEach(agendamento => {
+        const linha = document.createElement('tr');
+        const dataFormatada = formatarData(agendamento.data_agendamento);
+        
+        // pra evitar xss
+        const data = document.createElement('td').textContent = dataFormatada;
+
+        const nomePet = document.createElement('td').textContent = agendamento.nome_pet;
+
+        const especie = document.createElement('td').textContent = agendamento.especie;
+
+        const nomeTutor = document.createElement('td').textContent = agendamento.nome_tutor;
+
+        const telefoneTutor = document.createElement('td').textContent = agendamento.telefone_tutor;
+
+        const observacao = document.createElement('td').textContent = agendamento.observacao;
+
+        const input = document.createElement('input');
+        input.type = 'date';
+        input.value = dataParaInput(agendamento.data_agendamento);
+        input.setAttribute('data-id', agendamento.id);
+        
+        const botaoSalvar = document.createElement('button');
+        botaoSalvar.textContent = 'Salvar';
+        botaoSalvar.setAttribute('data-id', agendamento.id);
+        botaoSalvar.classList.add('btn-salvar');
+
+        const acoes = document.createElement('td');
+        acoes.appendChild(input);
+        acoes.appendChild(botaoSalvar);
+
+        linha.appendChild(data);
+        linha.appendChild(nomePet);
+        linha.appendChild(especie);
+        linha.appendChild(nomeTutor);
+        linha.appendChild(telefoneTutor);
+        linha.appendChild(observacao);
+        linha.appendChild(acoes);
+
+        corpoTabela.appendChild(linha);
+    });
+
+    const botoesSalvar = corpoTabela.querySelectorAll('.btn-salvar');
+    
+    botoesSalvar.forEach(botao => {
+        botao.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const inputData = this.parentElement.querySelector('input[type="date"]');
+            const novaData = inputData.value;
+            atualizarDataAgendamento(id, novaData);
+        });
+    });
 }
 
 // ------------------------------------------------------------
@@ -69,13 +141,37 @@ function renderizarAgendamentos(agendamentos) {
 // ------------------------------------------------------------
 async function atualizarDataAgendamento(id, novaData) {
     try {
-        // TODO: fetch PUT /api/agendamentos/{id}, enviando
-        // { data_agendamento: novaData } como JSON no body.
-        // Confira resposta.ok e avise o usuário (alert ou mensagem)
-        // se deu certo ou não.
+        const resposta = await fetch(`/api/agendamentos/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "data_agendamento": novaData
+            })
+        })
+        if (resposta.status == 401) {
+            window.location.href = '/login.html';
+            return;
+        }
+        if (resposta.status != 200) {
+            alert("Não foi possível editar o agendamento.")
+            return
+        }
 
+        carregarAgendamentos()
     } catch (erro) {
         alert('Erro ao atualizar data do agendamento.');
         console.error(erro);
     }
+}
+
+function dataParaInput(valor) {
+    if (!valor) return '';
+    return valor.substring(0, 10);
+}
+
+function formatarData(valor) {
+    if (!valor) return '-';
+    return dataParaInput(valor).split('-').reverse().join('/');
 }

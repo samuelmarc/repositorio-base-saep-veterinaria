@@ -34,10 +34,13 @@ router.get('/', verificarSessao, async (req, res) => {
     try {
         await client.connect();
 
-        // TODO: montar a query com JOIN (agendamentos -> pets ->
-        // tutores) e ORDER BY pela data do agendamento
-
-        const resultado = await client.query('SELECT * FROM agendamentos'); // TODO: ajustar
+        const resultado = await client.query(`
+            SELECT a.id, a.data_agendamento, p.nome AS nome_pet, p.especie, t.nome AS nome_tutor, t.telefone as telefone_tutor, a.observacao
+            FROM agendamentos a
+            JOIN pets p ON a.pet_id = p.id
+            JOIN tutores t ON p.tutor_id = t.id
+            ORDER BY a.data_agendamento ASC
+        `);
 
         res.json(resultado.rows);
     } catch (erro) {
@@ -58,10 +61,18 @@ router.put('/:id', verificarSessao, async (req, res) => {
         const { id } = req.params;
         const { data_agendamento } = req.body;
 
-        // TODO: montar o UPDATE usando client.query(...), atualizando
-        // só a coluna data_agendamento, filtrando por WHERE id = $...
+        const resultado = await client.query(`
+            UPDATE agendamentos
+            SET data_agendamento = $1
+            WHERE id = $2
+            RETURNING *
+        `, [data_agendamento, id]);
 
-        res.json({}); // TODO: substituir pela confirmação/registro atualizado
+        if (resultado.rows.length === 0) {
+            return res.status(404).json({ erro: 'Agendamento não encontrado.' });
+        }
+
+        res.json(resultado.rows[0]);
     } catch (erro) {
         res.status(500).json({ erro: erro.message });
     } finally {
