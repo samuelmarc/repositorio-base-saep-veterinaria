@@ -44,6 +44,7 @@ async function inicializar() {
 // ------------------------------------------------------------
 async function carregarTutores(termoBusca = '') {
     try {
+
         // TODO: monte a URL da requisição. Se termoBusca não for
         // vazio, inclua como query string, ex:
         //   /api/tutores?busca=' + encodeURIComponent(termoBusca)
@@ -54,6 +55,11 @@ async function carregarTutores(termoBusca = '') {
 
         // TODO: chame renderizarTutores(tutores) com o resultado
 
+        const url = termoBusca ? `/api/tutores?busca=${encodeURIComponent(termoBusca)}` : '/api/tutores';
+
+        const resposta = await fetch(url);
+        const tutores = await resposta.json();
+        renderizarTutores(tutores);
     } catch (erro) {
         mensagemTutores.textContent = 'Erro ao carregar tutores.';
         console.error(erro);
@@ -64,10 +70,32 @@ async function carregarTutores(termoBusca = '') {
 // Desenha a tabela de tutores na tela
 // ------------------------------------------------------------
 function renderizarTutores(tutores) {
+    if (!tutores || tutores.length === 0) {
+        mensagemTutores.classList.remove("d-none")
+        tabela.classList.add("d-none");
+        return
+    }
     // TODO: se a lista estiver vazia, mantenha mensagemTutores
     // visível com um texto tipo "Nenhum tutor encontrado." e a
     // tabela escondida (classe d-none)
+    mensagemTutores.classList.add("d-none")
+    tabela.classList.remove("d-none")
 
+    corpoTabela.innerHTML = '';
+
+    tutores.forEach(tutor => {
+        const linha = document.createElement('tr');
+        linha.innerHTML = `
+            <td>${tutor.nome}</td>
+            <td>${tutor.cpf}</td>
+            <td>${tutor.telefone}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary btn-editar" data-id="${tutor.id}">Editar</button>
+                <button class="btn btn-sm btn-outline-danger btn-excluir" data-id="${tutor.id}">Excluir</button>
+            </td>
+        `;
+        corpoTabela.appendChild(linha);
+    });
     // TODO: caso contrário, esconda mensagemTutores, mostre a
     // tabela (remova d-none) e monte uma linha <tr> para cada
     // tutor dentro de corpoTabela.innerHTML, com:
@@ -80,14 +108,24 @@ function renderizarTutores(tutores) {
     // addEventListener nos botões recém-criados (igual ao exemplo
     // de "Remover" visto em aula) - eles ainda não existem no HTML
     // até esse innerHTML ser inserido.
+
+    document.querySelectorAll('.btn-editar').forEach((botao) => {
+        botao.addEventListener('click', () => {
+            const tutor = tutores.find((t) => t.id == botao.dataset.id);
+            preencherFormularioParaEdicao(tutor);
+        });
+    });
+
+    document.querySelectorAll('.btn-excluir').forEach((botao) => {
+        botao.addEventListener('click', () => excluirTutor(botao.dataset.id));
+    });
 }
 
 // ------------------------------------------------------------
 // RF-14: busca
 // ------------------------------------------------------------
 btnBuscar.addEventListener('click', () => {
-    // TODO: pegue o valor de inputBusca.value e chame
-    // carregarTutores(termo)
+    carregarTutores(inputBusca.value);
 });
 
 // ------------------------------------------------------------
