@@ -85,18 +85,24 @@ function renderizarAgendamentos(agendamentos) {
         const linha = document.createElement('tr');
         const dataFormatada = formatarData(agendamento.data_agendamento);
         
-        // pra evitar xss
-        const data = document.createElement('td').textContent = dataFormatada;
+        // pra evitar xss, sem o inner
+        const data = document.createElement('td');
+        data.textContent = dataFormatada;
 
-        const nomePet = document.createElement('td').textContent = agendamento.nome_pet;
+        const nomePet = document.createElement('td');
+        nomePet.textContent = agendamento.nome_pet;
 
-        const especie = document.createElement('td').textContent = agendamento.especie;
+        const especie = document.createElement('td');
+        especie.textContent = agendamento.especie;
 
-        const nomeTutor = document.createElement('td').textContent = agendamento.nome_tutor;
+        const nomeTutor = document.createElement('td');
+        nomeTutor.textContent = agendamento.nome_tutor;
 
-        const telefoneTutor = document.createElement('td').textContent = agendamento.telefone_tutor;
+        const telefoneTutor = document.createElement('td');
+        telefoneTutor.textContent = agendamento.telefone_tutor;
 
-        const observacao = document.createElement('td').textContent = agendamento.observacao;
+        const observacao = document.createElement('td');
+        observacao.textContent = agendamento.observacao;
 
         const input = document.createElement('input');
         input.type = 'date';
