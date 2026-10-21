@@ -63,10 +63,27 @@ formPet.addEventListener('submit', async (evento) => {
     };
 
     try {
-        // TODO: faça o fetch POST /api/pets, enviando "pet" como
-        // JSON no body. Confira resposta.ok e mostre uma mensagem
-        // de sucesso ou erro em mensagemPet.textContent. Se der
-        // certo, limpe o formulário (formPet.reset()).
+        const resultado = await fetch('/api/pets', {
+            method: "POST",
+            headers: {
+                'Content-Type': "application/json"
+            },
+            body: JSON.stringify(pet)
+        })
+
+        if (resultado.status != 201) {
+            mensagemPet.textContent = 'Erro ao cadastrar pet.';
+            mensagemPet.className = 'text-danger mt-3';
+            return
+        }
+
+        mensagemPet.textContent = 'Sucesso ao cadastrar o pet.';
+        mensagemPet.className = 'text-success mt-3';
+        formPet.reset()
+        // TODO: faça o fetch POST /api/pets, enviando "pet"
+        // como JSON no body. Confira resposta.ok e mostre uma
+        // mensagem de sucesso ou erro em mensagemPet.textContent.
+        // Se der certo, limpe o formulário (formPet.reset()).
 
     } catch (erro) {
         mensagemPet.textContent = 'Erro ao cadastrar pet.';

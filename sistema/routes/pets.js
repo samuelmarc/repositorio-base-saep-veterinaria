@@ -30,13 +30,24 @@ router.post('/', verificarSessao, async (req, res) => {
 
         const { nome, especie, tutor_id } = req.body;
 
-        // TODO: validar que nome e tutor_id foram informados
-        // (tutor_id não pode ser vazio - todo pet precisa de um tutor)
+        if (!nome || !especie || !tutor_id) {
+            return res.status(400).json({ erro: 'Nome, Espécie e Tutor são obrigatórios.' });
+        }
 
-        // TODO: montar o INSERT usando client.query(...), com
-        // RETURNING * para devolver o registro criado
+        const result = await client.query('SELECT 1 FROM tutores WHERE id = $1', [tutor_id])
+        if (result.rowCount <= 0) {
+            return res.status(404).json({
+                erro: 'Tutor não existe'
+            })
+        }
 
-        res.status(201).json({}); // TODO: substituir pelo registro criado
+        const resultado = await client.query(`
+            INSERT INTO pets (nome, especie, tutor_id)
+            VALUES ($1, $2, $3)
+            RETURNING *
+        `, [nome, especie, tutor_id]);
+
+        res.status(201).json(resultado.rows[0]);
     } catch (erro) {
         res.status(500).json({ erro: erro.message });
     } finally {
